@@ -1,0 +1,42 @@
+let id = {
+  userId: 0,
+  postId: 0,
+  commentId: 0,
+}
+
+module.exports = {
+	signUp: (req, res) => {
+	 const db = req.app.get('db');
+	 const {email, password} = req.body
+	 let userData = {
+		id: id.userId,
+		email: email,
+		 password: password
+	 }
+
+	db.users.data.push(userData)
+		let profileData = {
+		id: id.userId,
+		thumbnail: "",
+		about:  "",
+		 }
+	db.profiles.data.push(profileData)
+	res.status(200).send('data sent!')
+	id.userId++
+	
+	},
+	update:(req, res) => {
+	const db = req.app.get('db');
+	const profileIndex = db.profiles.data.find(profile => profile.id === parseInt(req.params.id) )
+	if (profileIndex){
+		const { thumbnail, about } = req.body
+		console.log(db.profiles.data.id=[profileIndex]);
+		return res.status(200).send('updated!')
+	  }
+	return res.status(404).send({error: 'not found!'})
+	},
+	debug: (req, res) => {
+	  res.status(200).json(req.app.get('db'))
+	}
+
+}
