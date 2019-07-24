@@ -1,4 +1,3 @@
-
 module.exports = {
 	signUp: (req, res) => {
 	 const db = req.app.get('db');
@@ -12,23 +11,25 @@ module.exports = {
 	db.users.data.push(userData)
 	let profileData = {
 		 id: db.profiles.id,
+		 userId: db.users.id,
 		 thumbnail: "",
 		 about:  "",
 	}
 	db.profiles.data.push(profileData)
-	res.status(200).send('data sent!')
+	res.status(201).send(db)
 	db.profiles.id++
 	db.users.id++
 	},
 	update:(req, res) => {
 	const db = req.app.get('db');
-	const {profileId} = req.params
-	const profileIndex = db.profiles.data.findIndex(profile => profile.id === parseInt(profileId))
+	const profileIndex = db.profiles.data.findIndex(profile => profile.id === parseInt(req.params.profileId))
 	if (profileIndex!==-1){
 		const { thumbnail, about } = req.body
-		var id  = parseInt(profileId);
-		db.profiles.data[profileIndex] = {id, thumbnail, about}
-		return res.status(200).send('updated!')
+		const profId = db.profiles.data[profileIndex].id
+		const userId  = parseInt(req.params.profileId);
+
+		db.profiles.data[profileIndex] = {id:profId, userId:userId, thumbnail: thumbnail, about:about }
+		return res.status(200).send(db)
 	  }
 	return res.status(404).send({error: 'not found!'})
 	},
@@ -45,35 +46,47 @@ module.exports = {
 	
 	  db.posts.data.push(postData)
 	  db.posts.id++
-	 res.status(200).send('posted complete!')
+	 res.status(201).send(db)
 	},
 	comment: (req, res) => {
-	 const db = req.app.get('db');
-	 const {comment} = req.body
-	 var {userId, postId} = req.params
+	  const db = req.app.get('db');
+	  const {comment, postId, userId} = req.body
 	
 	 let commentData = {
 		commentId: db.comments.id,
-		content: comment,
-		postId: postId,
-		userId: userId
+		comment,
+		postId,
+		userId
 	 }
 	
 	db.comments.data.push(commentData)
 	db.comments.id++
-	res.status(200).send('comment added!')
+	res.status(201).send(db)
 	},
 	getProfile: (req, res) => {
-	 const db = req.app.get('db');
-	 const { email  } = req.query
-	 const user  = db.users.data.find(p => {
+	  const db = req.app.get('db');
+	  const { email  } = req.query
+	  const user  = db.users.data.find(p => {
 		return	p.email === email	
 	 })
-	const profile = db.profiles.data.find(p => p.id === user.id)
-	res.status(200).send(profile)
+	  const profile = db.profiles.data.find(p => p.id === user.id)
+	  res.status(200).send(profile)
 	},
-	debug: (req, res) => {
-	  res.status(200).json(req.app.get('db'))
+	fetchPosts: (req, res) => {
+	  const db = req.app.get('db');
+	  const { userId } = req.params
+	  const user = db.posts.data.filter(p => p.userId === parseInt(userId))
+	  
+	  res.status(200).send(user)  
+	},
+	viewPost: (req, res) => {
+	  const db = req.app.get('db');
+	  const { postId } = req.params
+	  const post = db.posts.data.find(p => p.postId === parseInt(postId))
+	
+	  if (post.length = 0){
+		res.status(404).send({error: 'not found'})
+	  }
+	  res.status(200).send(post)	
 	}
-
 }
